@@ -29,7 +29,6 @@ def get_db():
 def index():
     db = get_db()
     dbase = FDataBase(db)
-    print(dbase.getMenu())
     return render_template('index.html', title="Главная страница", menu = dbase.getMenu())
 
 @app.teardown_appcontext
@@ -39,10 +38,14 @@ def close_db(error):
 
 @app.route("/about")
 def about():
+    db = get_db()
+    dbase = FDataBase(db)
     return render_template('about.html', title="Страница О нас",  menu = dbase.getMenu())
 
 @app.route("/contact", methods=["POST", "GET"])
 def contact():
+    db = get_db()
+    dbase = FDataBase(db)    
     if request.method == 'POST' :
         if len(request.form['username']) > 2:
             flash('Сообщение отправлено', category='success')
@@ -53,6 +56,8 @@ def contact():
 
 @app.route("/login", methods=["POST", "GET"])
 def login():
+    db = get_db()
+    dbase = FDataBase(db)    
     if 'userLogged' in session:
         return redirect(url_for('profile', username=session['userLogged']))
     elif request.method == 'POST' and request.form['username'] == "alex" and request.form['psw'] =="1234":
@@ -63,6 +68,8 @@ def login():
 
 @app.errorhandler(404)
 def pageNotFound(error):
+    db = get_db()
+    dbase = FDataBase(db)    
     return render_template('page404.html', title="Страница не найдена",  menu = dbase.getMenu()), 404 
 
 

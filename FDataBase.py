@@ -33,7 +33,7 @@ class FDataBase:
             res = self.__cur.fetchone()
             if res:
                 return res
-        except sqliet3.Error as e:
+        except sqlite3.Error as e:
             print("Ошибка получения стастьи из БД" + ' ' + str(e))
         
         return (False, False)       
