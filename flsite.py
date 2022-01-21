@@ -84,12 +84,15 @@ def addPost():
     return render_template('add_post.html', title="Добавление статьи", menu = dbase.getMenu() )
 
 
-@app.route("/profile/<username>")
-def profile(username):
-    if 'userLogged' not in session or session['userLogged'] != username:
-        abort(401)
+@app.route("/post/<int:id_post>")
+def showPost(id_post):
+    db = get_db()
+    dbase = FDataBase(db)
+    title, post = dbase.getPost(id_post)
+    if not title:
+        abort(404)
 
-    return f"Профиль пользователя: {username}"
+    return render_template('post.html', menu=dbase.getMenu(), title=title, post=post)
 
 if __name__ == "__main__":
     app.run(host=HOST, port=PORT, debug=True)
