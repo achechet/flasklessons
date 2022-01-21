@@ -39,7 +39,7 @@ def close_db(error):
 
 @app.route("/about")
 def about():
-    return render_template('about.html', title="Страница О нас", menu=menu)
+    return render_template('about.html', title="Страница О нас",  menu = dbase.getMenu())
 
 @app.route("/contact", methods=["POST", "GET"])
 def contact():
@@ -49,7 +49,7 @@ def contact():
         else:
             flash('Ошибка отправки', category='error')
 
-    return render_template('contact.html', title="Contact", menu=menu)    
+    return render_template('contact.html', title="Contact",  menu = dbase.getMenu())    
 
 @app.route("/login", methods=["POST", "GET"])
 def login():
@@ -59,11 +59,11 @@ def login():
         session['userLogged'] = request.form['username']
         return redirect(url_for('profile', username=session['userLogged']))
         
-    return render_template('login.html', title="Авторизация", menu=menu)
+    return render_template('login.html', title="Авторизация",  menu = dbase.getMenu())
 
 @app.errorhandler(404)
 def pageNotFound(error):
-    return render_template('page404.html', title="Страница не найдена", menu=menu), 404 
+    return render_template('page404.html', title="Страница не найдена",  menu = dbase.getMenu()), 404 
 
 
 @app.route("/add_post", methods=["POST", "GET"])
