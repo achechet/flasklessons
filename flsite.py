@@ -29,7 +29,7 @@ def get_db():
 def index():
     db = get_db()
     dbase = FDataBase(db)
-    return render_template('index.html', title="Главная страница", menu = dbase.getMenu())
+    return render_template('index.html', title="Главная страница", posts=dbase.getPostAnonce(), menu = dbase.getMenu())
 
 @app.teardown_appcontext
 def close_db(error):

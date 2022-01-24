@@ -16,6 +16,7 @@ class FDataBase:
         except:
             print("Ошибка чтения из БД")
         return[]
+    
     def addPost(self, title, text):
         try:
             tm = math.floor(time.time())
@@ -37,4 +38,15 @@ class FDataBase:
             print("Ошибка получения стастьи из БД" + ' ' + str(e))
         
         return (False, False)       
+    
+    def getPostAnonce(self):
+        try:
+            self.__cur.execute(f"SELECT id, title, text FROM posts ORDER BY time DESC")
+            res = self.__cur.fetchall()
+            if res: return res            
+        except sqlite3.Error as e:
+            print("Ошибка получения стсьи из БД " +str(e))
+        
+        return []
+    
     
