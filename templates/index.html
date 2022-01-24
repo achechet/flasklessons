@@ -8,7 +8,7 @@
     <li>
         <p class="title">
             <a href="{{ url_for('showPost', id_post=p.id)}}">{{p.title}}</a></p>
-            <p class="annonce">{{ p.text[:50]}}</p>
+            <p class="annonce">{{ p.text[:50] | striptags }}</p>
     </li>
     {% endfor %}
 </ul>
