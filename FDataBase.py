@@ -26,7 +26,7 @@ class FDataBase:
                 return False
             
             tm = math.floor(time.time())
-            self.__cur.execute("INSERT INTO posts VALUES(NULL, ?, ?, ?, ?)", (title, text, ursl, tm))
+            self.__cur.execute("INSERT INTO posts VALUES(NULL, ?, ?, ?, ?)", (title, url, text, tm))
             self.__db.commit()            
         except sqlite3.Error as e:
             print("Ошибка добавления статьи в БД" + ' ' + str(e))  
