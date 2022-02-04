@@ -108,5 +108,13 @@ def showPost(alias):
 
     return render_template('post.html', menu=dbase.getMenu(), title=title, post=post)
 
+@app.before_request
+def before_request():
+    print("before request called")
+
+@app.teardown_request
+def teardown_request(response):
+    print("teardown request called")    
+
 if __name__ == "__main__":
     app.run(host=HOST, port=PORT, debug=True)
