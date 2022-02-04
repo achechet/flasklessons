@@ -108,6 +108,8 @@ def showPost(alias):
 
     return render_template('post.html', menu=dbase.getMenu(), title=title, post=post)
 
+# before_first_request & after_request 
+
 @app.before_request
 def before_request():
     print("before request called")
