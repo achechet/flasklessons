@@ -77,6 +77,12 @@ def login():
 def pageNotFound(error):
     db = get_db()
     dbase = FDataBase(db)    
+    if 'visits' in session:
+        session['visits'] = session.get('visits') + 1
+    else:
+        session['visits'] = 1
+    
+    print(f"404 page Число просмотров: {session['visits']}")
     return render_template('page404.html', title="Страница не найдена",  menu = dbase.getMenu()), 404 
 
 
