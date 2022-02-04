@@ -6,6 +6,8 @@ from flask.helpers import flash
 from werkzeug.utils import redirect
 from FDataBase import FDataBase
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager, login_user, login_required
+from UserLogin import UserLogin
 
 load_dotenv()
 APP_KEY =  os.getenv('APP_KEY')
@@ -15,6 +17,13 @@ DATABASE = '/tmp/flsite.db'
 app = Flask(__name__)
 app.config['SECRET_KEY'] = APP_KEY
 app.config.update(dict(DATABASE=os.path.join(app.root_path, 'flsite.db')))
+
+login_manager = LoginManager(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    print("load_user")
+    return UserLogin().fromDB(user_id, dbase)
 
 def connect_db():
     conn = sqlite3.connect(app.config['DATABASE'])
@@ -66,11 +75,14 @@ def contact():
 
 @app.route("/login", methods=["POST", "GET"])
 def login():
-    if 'userLogged' in session:
-        return redirect(url_for('profile', username=session['userLogged']))
-    elif request.method == 'POST' and request.form['name'] == "alex" and request.form['psw'] =="1234":
-        session['userLogged'] = request.form['username']
-        return redirect(url_for('profile', username=session['userLogged']))
+    if request.method == 'POST' :
+        user = dbase.getUserByEmail(request.form['email'])
+        if user and check_password_hash(user['psw'], request.form['psw']):
+            userlogin = UserLogin().create(user)
+            login_user(userlogin)
+            return redirect(url_for('index'))
+        
+        flash("Неверная пара логин/пароль", "error")
         
     return render_template('login.html', title="Авторизация",  menu = dbase.getMenu())
 
@@ -117,6 +129,7 @@ def addPost():
 
 
 @app.route("/post/<alias>")
+@login_required
 def showPost(alias):
     title, post = dbase.getPost(alias)
     if not title:
