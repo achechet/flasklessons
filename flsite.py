@@ -5,6 +5,7 @@ from flask import Flask, render_template, url_for, flash, request, session, redi
 from flask.helpers import flash
 from werkzeug.utils import redirect
 from FDataBase import FDataBase
+from werkzeug.security import generate_password_hash, check_password_hash
 
 load_dotenv()
 APP_KEY =  os.getenv('APP_KEY')
@@ -32,6 +33,14 @@ def get_db():
         g.link_db = connect_db()
     return g.link_db    
 
+dbase = None
+@app.before_request
+def before_request():
+    ### Установление сщединения с БД перед выполнением запроса ###
+    global dbase
+    db = get_db()
+    dbase = FDataBase(db)
+
 @app.teardown_appcontext
 def close_db(error):
     if hasattr(g, 'link_db'):
@@ -39,20 +48,14 @@ def close_db(error):
 
 @app.route("/")
 def index():
-    db = get_db()
-    dbase = FDataBase(db)
     return render_template('index.html', menu = dbase.getMenu(), title="Главная страница", posts=dbase.getPostAnonce())
 
 @app.route("/about")
 def about():
-    db = get_db()
-    dbase = FDataBase(db)
     return render_template('about.html', title="Страница О нас",  menu = dbase.getMenu())
 
 @app.route("/contact", methods=["POST", "GET"])
 def contact():
-    db = get_db()
-    dbase = FDataBase(db)    
     if request.method == 'POST' :
         if len(request.form['username']) > 2:
             flash('Сообщение отправлено', category='success')
@@ -63,20 +66,32 @@ def contact():
 
 @app.route("/login", methods=["POST", "GET"])
 def login():
-    db = get_db()
-    dbase = FDataBase(db)    
     if 'userLogged' in session:
         return redirect(url_for('profile', username=session['userLogged']))
-    elif request.method == 'POST' and request.form['username'] == "alex" and request.form['psw'] =="1234":
+    elif request.method == 'POST' and request.form['name'] == "alex" and request.form['psw'] =="1234":
         session['userLogged'] = request.form['username']
         return redirect(url_for('profile', username=session['userLogged']))
         
     return render_template('login.html', title="Авторизация",  menu = dbase.getMenu())
 
+@app.route("/register", methods=["POST", "GET"])
+def register():            
+    if request.method == "POST":
+        if len(request.form['name']) > 4 and len(request.form['email']) > 4 and len(request.form['psw']) > 4 and request.form['psw'] == request.form['psw2']:
+            hash = generate_password_hash(request.form['psw'])
+            res = dbase.addUser(request.form['name'], request.form['email'], hash)
+            if res:
+                flash("Вы успешно зарегистрированы", "success")      
+                return redirect(url_for('login'))          
+        else:
+                flash("Ошибка при добавдении в БД 1", "error")
+    else:
+            flash("Не верно заполнены поля формы", "error")
+    
+    return render_template('register.html', title="Регистрация",  menu = dbase.getMenu())    
+
 @app.errorhandler(404)
 def pageNotFound(error):
-    db = get_db()
-    dbase = FDataBase(db)    
     if 'visits' in session:
         session['visits'] = session.get('visits') + 1
     else:
@@ -88,9 +103,6 @@ def pageNotFound(error):
 
 @app.route("/add_post", methods=["POST", "GET"])
 def addPost():
-    db = get_db()
-    dbase = FDataBase(db)
-    
     if request.method == "POST":
         if len(request.form['name']) > 4 and len(request.form['post']) > 10:
             res = dbase.addPost(request.form['name'], request.form['post'], request.form['url'] )
@@ -106,8 +118,6 @@ def addPost():
 
 @app.route("/post/<alias>")
 def showPost(alias):
-    db = get_db()
-    dbase = FDataBase(db)
     title, post = dbase.getPost(alias)
     if not title:
         abort(404)
@@ -115,10 +125,6 @@ def showPost(alias):
     return render_template('post.html', menu=dbase.getMenu(), title=title, post=post)
 
 # before_first_request & after_request 
-
-@app.before_request
-def before_request():
-    print("before request called")
 
 @app.teardown_request
 def teardown_request(response):
