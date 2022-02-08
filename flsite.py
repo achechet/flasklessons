@@ -1,7 +1,7 @@
 import os
 import sqlite3
 from dotenv import load_dotenv
-from flask import Flask, render_template, url_for, flash, request, session, redirect, abort, g
+from flask import Flask, render_template, url_for, flash, request, session, redirect, abort, g, make_response
 from flask.helpers import flash
 from werkzeug.utils import redirect
 from FDataBase import FDataBase
@@ -14,6 +14,7 @@ APP_KEY =  os.getenv('APP_KEY')
 PORT = os.getenv('PORT')
 HOST = os.getenv('HOST')
 DATABASE = '/tmp/flsite.db'
+MAX_CONTENT_LENGTH = 1024 * 1024
 app = Flask(__name__)
 app.config['SECRET_KEY'] = APP_KEY
 app.config.update(dict(DATABASE=os.path.join(app.root_path, 'flsite.db')))
@@ -151,12 +152,43 @@ def logout():
     flash("Вы вышли из аккаунта", "success")
     return redirect(url_for('login'))
 
-@app.route("/post/profile")
+@app.route("/profile")
 @login_required
 def profile():
-    return f"""<p><a href="{url_for('logout')}"> Выйти из профиля </a>
-                <p> user info: {current_user.get_id()} """
+    return render_template('profile.html', menu=dbase.getMenu(), title="Профиль")
 
+@app.route("/userava")
+@login_required
+def userava():
+    img = current_user.getAvatar(app)
+    if not img:
+        return ""
+    
+    h = make_response(img)
+    h.headers['Content-Type'] = 'image/png'
+    return h
+
+@app.route("/upload", methods=['POST', 'GET'])
+@login_required
+def upload():
+        if request.method == 'POST':
+            file = request.files['file']
+            if file and current_user.verifyExt(file.filename):
+                try:
+                    img = file.read()
+                    res = dbase.updateUserAvatar(img, current_user.get_id())
+                    if not res:
+                        flash("Ошибка обновления ававтара1", "error")
+                    flash("Аватар обновлен", "success")
+                except FileNotFoundError as e:
+                    flash("Ошибка чтения файла", "error")
+            else:
+                flash("Ошибка обновления аватара2", "error")
+        
+        return redirect(url_for('profile'))
+        
+                
+    
 # before_first_request & after_request 
 
 @app.teardown_request
